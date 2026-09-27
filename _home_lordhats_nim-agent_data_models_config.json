@@ -1,0 +1,7 @@
+{
+    "overseer": "meta/llama3-70b-instruct",
+    "architect": "z-ai/glm-5.1",
+    "coder": "z-ai/glm-5.1",
+    "verifier": "minimaxai/minimax-m2.7",
+    "agent": "mimo-v2.5-pro"
+}

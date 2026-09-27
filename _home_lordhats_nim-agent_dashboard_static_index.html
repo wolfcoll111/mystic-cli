@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a14">
+<title>Mystic — AI Ecosystem</title>
+<meta name="description" content="Mystic AI Dashboard — Chat, Cloud Storage, Terminal, and Agent Management">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="mystic-brand mystic-brand-lg">Mystic</div>
+    <p>Enter your API key to access the dashboard</p>
+    <input class="login-input" id="loginKey" type="password" placeholder="Paste your API key..." autocomplete="off">
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app" style="display:none">
+
+  <!-- Left Sidebar -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <div class="mystic-brand">Mystic</div>
+      <button class="sidebar-close" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sidebar-nav">
+      <button class="nav-btn active" id="navChat" onclick="switchView('chat')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        New thread
+      </button>
+      <button class="nav-btn" id="navTerminal" onclick="switchView('terminal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        Terminal
+      </button>
+      <button class="nav-btn" id="navCloud" onclick="switchView('cloud')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>
+        Cloud Storage
+      </button>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-label">Threads</div>
+    <div class="thread-list" id="threadList"></div>
+  </div>
+
+  <!-- Main Area -->
+  <div id="mainArea">
+    <!-- Header -->
+    <div class="main-header">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div class="header-title" id="headerTitle">New thread</div>
+      <div class="header-actions">
+        <button class="header-btn" id="toggleSettings" onclick="toggleSettings()" title="Settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2m-9-11h2m18 0h2m-3.6-6.4l-1.4 1.4M6.4 17.6l-1.4 1.4m0-14l1.4 1.4m11.2 11.2l1.4 1.4"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tunnel Banner -->
+    <div class="tunnel-banner" id="tunnelBanner" style="display:none">
+      <span class="status-dot"></span>
+      <span>Cloud:</span>
+      <span class="url" id="tunnelUrl"></span>
+      <button class="cloud-btn" onclick="copyTunnelUrl()" title="Copy URL">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      </button>
+    </div>
+
+    <!-- Welcome Screen -->
+    <div id="welcomeScreen">
+      <div class="welcome-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 007.92 12.446A9 9 0 1112 3z"/><path d="M17 4a2 2 0 012 2"/><path d="M21 8a6 6 0 01-6 6"/></svg>
+      </div>
+      <h2>Let's build</h2>
+      <p>Start a conversation with Mystic AI, open a terminal, or manage your cloud files.</p>
+    </div>
+
+    <!-- Chat Messages -->
+    <div id="chatMessages" class="hidden"></div>
+
+    <!-- Chat Input -->
+    <div id="inputArea">
+      <div id="attachmentPreview" style="display:none"></div>
+      <div class="input-container">
+        <div class="input-top">
+          <button class="attach-btn" onclick="addFiles()" title="Attach files">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <input type="file" id="chatFileInput" multiple hidden onchange="handleChatFiles(this)">
+          <textarea id="chatInput" rows="1" placeholder="Ask Mystic anything..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg>
+          </button>
+        </div>
+        <div class="input-bottom">
+          <select class="model-select" id="modelSelect"></select>
+          <span style="flex:1"></span>
+          <span style="font-size:11px;color:var(--text-ter)" id="charCount"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal View -->
+    <div id="terminalView">
+      <div class="terminal-output" id="terminalOutput">
+        <div style="color:#a855f7;margin-bottom:12px">Mystic Terminal — Ready</div>
+      </div>
+      <div class="terminal-input-area">
+        <span class="terminal-prompt">❯</span>
+        <input type="text" class="terminal-input" id="terminalInput" placeholder="Type a command..." onkeydown="handleTerminalKey(event)" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+
+    <!-- Cloud Storage View -->
+    <div id="cloudView">
+      <div class="cloud-header">
+        <div class="breadcrumb" id="breadcrumb"></div>
+        <div class="cloud-actions">
+          <button class="cloud-btn" onclick="createFolder()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><path d="M12 11v6m-3-3h6"/></svg>
+            <span>New Folder</span>
+          </button>
+          <label class="cloud-btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Upload</span>
+            <input type="file" id="fileUpload" multiple hidden onchange="uploadFiles(this.files)">
+          </label>
+        </div>
+      </div>
+      <div class="file-list" id="fileList"></div>
+      <div class="storage-bar" id="storageBar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>
+        <span id="storageText">0 B used</span>
+        <div class="status-bar" style="flex:1;max-width:120px"><div class="status-bar-fill" id="storageFill" style="width:0%"></div></div>
+      </div>
+      <div class="drop-overlay" id="dropOverlay"><span>Drop files to upload</span></div>
+    </div>
+  </div>
+
+  <!-- Settings Backdrop (tablet/PC overlay) -->
+  <div id="settingsBackdrop" onclick="toggleSettings()"></div>
+
+  <!-- Right Settings Panel -->
+  <div id="settingsPanel" class="collapsed">
+    <div class="settings-header">
+      <h3>Settings</h3>
+      <button class="settings-close" onclick="toggleSettings()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="settings-section">
+      <h4>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2m-9-11h2m18 0h2"/></svg>
+        System Status
+      </h4>
+      <div id="statusInfo">
+        <div class="status-row"><span class="status-label">Status</span><span class="status-value"><span class="status-dot"></span>Online</span></div>
+        <div class="status-row"><span class="status-label">Uptime</span><span class="status-value" id="sUptime">—</span></div>
+        <div class="status-row"><span class="status-label">CPU</span><span class="status-value" id="sCpu">—</span></div>
+        <div class="status-row"><span class="status-label">Memory</span><span class="status-value" id="sMem">—</span></div>
+        <div class="status-bar"><div class="status-bar-fill" id="sMemBar" style="width:0%"></div></div>
+        <div class="status-row" style="margin-top:8px"><span class="status-label">Disk</span><span class="status-value" id="sDisk">—</span></div>
+        <div class="status-bar"><div class="status-bar-fill" id="sDiskBar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h4>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 007.92 12.446A9 9 0 1112 3z"/></svg>
+        Swarm Models
+      </h4>
+      <div id="swarmModels">
+        <div class="model-row"><div class="model-color-dot" data-role="overseer" onclick="openColorPicker(this)" style="background:#7c3aed"></div><span class="model-role">Overseer</span><span class="model-value" data-role="overseer" onclick="editModel(this)">—</span></div>
+        <div class="model-row"><div class="model-color-dot" data-role="architect" onclick="openColorPicker(this)" style="background:#3b82f6"></div><span class="model-role">Architect</span><span class="model-value" data-role="architect" onclick="editModel(this)">—</span></div>
+        <div class="model-row"><div class="model-color-dot" data-role="coder" onclick="openColorPicker(this)" style="background:#10b981"></div><span class="model-role">Coder</span><span class="model-value" data-role="coder" onclick="editModel(this)">—</span></div>
+        <div class="model-row"><div class="model-color-dot" data-role="verifier" onclick="openColorPicker(this)" style="background:#f59e0b"></div><span class="model-role">Verifier</span><span class="model-value" data-role="verifier" onclick="editModel(this)">—</span></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h4>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/></svg>
+        Normal Agent
+      </h4>
+      <div class="model-row"><div class="model-color-dot" data-role="agent" onclick="openColorPicker(this)" style="background:#a855f7"></div><span class="model-role">Model</span><span class="model-value" data-role="agent" onclick="editModel(this)">—</span></div>
+    </div>
+
+    <div class="settings-section">
+      <h4>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Providers
+      </h4>
+      <div id="providersList"></div>
+      <button class="add-btn" onclick="openAddProvider()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+        Add Provider
+      </button>
+    </div>
+
+    <div class="settings-section">
+      <h4>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        Skills
+      </h4>
+      <div id="skillsList"></div>
+    </div>
+
+    <div class="settings-section">
+      <h4>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        MCP Servers
+      </h4>
+      <div id="mcpServersList"></div>
+      <button class="add-btn" onclick="openAddMCP()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+        Add MCP Server
+      </button>
+    </div>
+
+    <div class="settings-section">
+      <h4>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>
+        Cloud Tunnel
+      </h4>
+      <div id="tunnelSection">
+        <div class="status-row"><span class="status-label">Status</span><span class="status-value" id="tStatus">Offline</span></div>
+        <div style="margin-top:12px">
+          <button class="cloud-btn primary" id="tunnelToggle" onclick="toggleTunnel()" style="width:100%;justify-content:center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <span>Start Tunnel</span>
+          </button>
+        </div>
+        <p style="font-size:11px;color:var(--text-ter);margin-top:10px">Free cloud access via Cloudflare. Access your dashboard from any device.</p>
+      </div>
+    </div>
+
+    <div class="settings-section" style="border:none">
+      <h4>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        API Key
+      </h4>
+      <div style="font-family:'JetBrains Mono',Monaco,monospace;font-size:11px;background:var(--bg-alt);padding:10px;border-radius:8px;word-break:break-all;color:var(--text-sec);user-select:all;cursor:pointer" id="apiKeyDisplay" onclick="navigator.clipboard.writeText(this.textContent)" title="Click to copy">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Rename/Folder Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">New Folder</h3>
+    <input class="modal-input" id="modalInput" placeholder="Name..." onkeydown="if(event.key==='Enter')confirmModal()">
+    <div id="modalExtraFields"></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn confirm" id="modalConfirm" onclick="confirmModal()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Color Picker Popup -->
+<div class="color-picker-overlay" id="colorPickerOverlay">
+  <div class="color-picker">
+    <h4>Choose Color</h4>
+    <div class="color-grid" id="colorGrid"></div>
+    <div class="color-picker-actions">
+      <button class="modal-btn cancel" onclick="closeColorPicker()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
