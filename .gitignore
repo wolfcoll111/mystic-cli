@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.log
+*.db
+*.db-wal
+*.db-shm
+data/
+!data/.gitkeep
+dashboard_threads/
+chat_uploads/
+bin/
+*.tmp
+.mystic/
